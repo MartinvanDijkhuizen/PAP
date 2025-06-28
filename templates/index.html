@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <title>Meetdata test appartement</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
+</head>
+<body>
+    <h1>Op deze site kan je de meetdata downloaden en checken of het systeem werkt</h1>
+
+    <h2>Download Sensor Data</h2>
+    <ul>
+        <li><a href="/download/sensorbuitenmuur.csv"><button>Download sensorbuitenmuur CSV</button></a></li>
+        <li><a href="/download/sensorbinnenmuur.csv"><button>Download sensorbinnenmuur CSV</button></a></li>
+        <li><a href="/download/sensorhoek.csv"><button>Download sensorhoek CSV</button></a></li>
+        <li><a href="/download/sensorvloer.csv"><button>Download sensorvloer CSV</button></a></li>
+        <li><a href="/download/sensorraam.csv"><button>Download sensorraam CSV</button></a></li>
+        <li><a href="/download/sensorruimte.csv"><button>Download sensorruimte CSV</button></a><li>
+        <li><a href="/download/weerdata.csv"><button>Download windrichting CSV</button></a></li>
+    </ul>
+
+    <h2>Alle CSV-bestanden in één ZIP</h2>
+    <a href="/download/all-csvs.zip">
+        <button>Download Alle CSV's als ZIP</button>
+    </a>
+
+<h2>Laatste foutmelding</h2>
+<div style="border: 1px solid #cc0000; padding: 10px; background-color: #ffe6e6;">
+    <strong>Bestand:</strong> <span id="error-source">{{ latest_error.source }}</span><br>
+    <strong>Tijdstip:</strong> <span id="error-timestamp">{{ latest_error.timestamp }}</span><br>
+    <strong>Temp en humindity:</strong> <span id="error-description">{{ latest_error.description }}</span>
+</div>
+
+    <h1>Meetdata:</h1>
+	<label for="fileSelect">Kies een sensorbestand:</label>
+<select id="fileSelect">
+    <option value="sensorbuitenmuur.csv">sensorbuitenmuur</option>
+    <option value="sensorbinnenmuur.csv">sensorbinnenmuur</option>
+    <option value="sensorhoek.csv">sensorhoek</option>
+    <option value="sensorvloer.csv">sensorvloer</option>
+    <option value="sensorraam.csv">sensorraam</option>
+    <option value="sensorruimte.csv">sensorruimte</option>
+</select>
+
+    <canvas id="sensorChart" width="800" height="300"></canvas>
+	
+<script>
+
+        function updateLatestError() {
+            fetch('/latest-error')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('error-source').textContent = data.source;
+                    document.getElementById('error-timestamp').textContent = data.timestamp;
+                    document.getElementById('error-description').textContent = data.description;
+                })
+                .catch(error => console.error('Error fetching the latest error:', error));
+        }
+
+        // Update the latest error every 60 seconds
+        setInterval(updateLatestError, 60000);
+
+    let chart;  // Global chart instance
+
+    function loadChart(csvFile) {
+        fetch(`/graph-data/${csvFile}`)
+            .then(response => response.json())
+            .then(data => {
+                const ctx = document.getElementById('sensorChart').getContext('2d');
+
+                // If chart exists, just update the data
+                if (chart) {
+                    chart.data.labels = data.timestamps;
+                    chart.data.datasets[0].data = data.temperatures;
+                    chart.data.datasets[1].data = data.humidities;
+                    chart.update();
+                } else {
+                    chart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: data.timestamps,
+                            datasets: [
+                                {
+                                    label: 'Temperatuur (°C)',
+                                    data: data.temperatures,
+                                    borderColor: 'rgb(255, 99, 132)',
+                                    fill: false
+                                },
+                                {
+                                    label: 'Luchtvochtigheid (%)',
+                                    data: data.humidities,
+                                    borderColor: 'rgb(54, 162, 235)',
+                                    fill: false
+                                }
+                            ]
+                        },
+                        options: {
+                            scales: {
+                                x: {
+                                    title: { display: true, text: 'Tijdstip' }
+                                },
+                                y: {
+                                    title: { display: true, text: 'Waarde' }
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+    }
+
+    // Load initially selected file
+    const fileSelect = document.getElementById('fileSelect');
+    loadChart(fileSelect.value);
+
+    // Update chart when dropdown changes
+    fileSelect.addEventListener('change', function () {
+        loadChart(this.value);
+    });
+
+    // Auto-refresh data every 60 seconds based on selected file
+    setInterval(() => {
+        loadChart(fileSelect.value);
+    }, 60000);
+</script>
+  
+</body>
+</html>
