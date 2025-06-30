@@ -1,11 +1,21 @@
-import adafruit_dht
-import board
+try:
+    import adafruit_dht
+    import board
+    # Initialize the DHT22 sensor (connected to GPIO"")
+    dht_device = adafruit_dht.DHT22(board.D5)
+except ImportError:
+    # Mock for Windows
+    class MockDHT:
+        @property
+        def temperature(self): return 22.5
+        @property
+        def humidity(self): return 55.0
+        def exit(self): pass
+    dht_device = MockDHT()
+
 import csv
 import time
 from datetime import datetime
-
-# Initialize the DHT22 sensor (connected to GPIO"")
-dht_device = adafruit_dht.DHT22(board.D5)
 
 # CSV file path
 csv_file = "sensorbinnenmuur.csv"
