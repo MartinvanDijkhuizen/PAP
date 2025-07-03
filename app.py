@@ -5,7 +5,7 @@ import io
 import csv
 
 app = Flask(__name__)
-csv_folder = '/home/jstuut/meetsysteem'
+csv_folder = '/home/hu/PAP'
 
 def get_latest_error():
     error_file = os.path.join(csv_folder, 'sensorerrors.csv')

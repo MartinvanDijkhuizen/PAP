@@ -6,19 +6,19 @@ from datetime import datetime
 
 # alle bestanden die gecheckt moeten worden, voeg hier je extra bestand toe en maak de tijd onderin korter
 CSV_FILES = [
-        '/home/jstuut/meetsysteem/sensorbuitenmuur.csv',
-        '/home/jstuut/meetsysteem/sensorbinnenmuur.csv',
-        '/home/jstuut/meetsysteem/sensorhoek.csv',
-        '/home/jstuut/meetsysteem/sensorraam.csv',
-        '/home/jstuut/meetsysteem/sensorruimte.csv',
-        '/home/jstuut/meetsysteem/sensorvloer.csv'
+        '/home/hu/PAP/sensorbuitenmuur.csv',
+        '/home/hu/PAP/sensorbinnenmuur.csv',
+        '/home/hu/PAP/sensorhoek.csv',
+        '/home/hu/PAP/sensorraam.csv',
+        '/home/hu/PAP/sensorruimte.csv',
+        '/home/hu/PAP/sensorvloer.csv'
 ]
 
 # file waar alle fouten in gestopt worden
-OUTLIER_FILE = '/home/jstuut/meetsysteem/sensorerrors.csv'
+OUTLIER_FILE = '/home/hu/PAP/sensorerrors.csv'
 
 # slaat de datapunten hierin op
-logging.basicConfig(filename='/home/jstuut/meetsysteem/checkalg.log', level=logging.INFO,
+logging.basicConfig(filename='/home/hu/PAP/checkalg.log', level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Leest de laatste n regels van een CSV-bestand

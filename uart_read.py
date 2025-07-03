@@ -6,7 +6,7 @@ from datetime import datetime
 ser = serial.Serial('/dev/serial0', baudrate=9600, timeout=5)
 
 # Path to the CSV file
-csv_file_path = '/home/jstuut/meetsysteem/weerdata.csv'
+csv_file_path = '/home/hu/PAP/weerdata.csv'
 
 print("Listening for UART messages...")
 

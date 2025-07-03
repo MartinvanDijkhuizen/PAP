@@ -4,7 +4,7 @@ from datetime import datetime
 import os
 
 # CSV file path
-csv_file = "/home/weerstation/weerstation_quest/counter_data.csv"
+csv_file = "/home/hu/PAP/counter_data.csv"
 
 # Start counter
 counter = 0

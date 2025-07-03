@@ -1,7 +1,7 @@
 import time
 import serial
 
-csv_file = "/home/weerstation/weerstation_quest/wind_data.csv"
+csv_file = "/home/hu/PAP/wind_data.csv"
 uart_port = "/dev/serial0"  
 baud_rate = 9600
 
