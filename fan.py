@@ -20,7 +20,7 @@ try:
     while True:
         temp = get_temp()
 
-        if temp < 45.0:
+        if temp < 15.0:
             pwm.ChangeDutyCycle(0)
         else:
             pwm.ChangeDutyCycle(100)

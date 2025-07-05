@@ -20,7 +20,7 @@ from datetime import datetime
 # CSV file path
 csv_file = "sensorbinnenmuur.csv"
 
-time.sleep(100)
+time.sleep(60)
 
 # Write CSV header if the file doesn't exist
 try:

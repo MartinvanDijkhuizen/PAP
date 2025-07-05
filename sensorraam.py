@@ -10,7 +10,7 @@ dht_device = adafruit_dht.DHT22(board.D17)
 # CSV file path
 csv_file = "sensorraam.csv"
 
-time.sleep(200)
+time.sleep(120)
 
 # Write CSV header if the file doesn't exist
 try:
