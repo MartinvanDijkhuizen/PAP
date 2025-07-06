@@ -4,7 +4,7 @@ import csv
 import time
 from datetime import datetime
 
-# Initialize the DHT22 sensor (connected to GPIO"")
+# Initialize the DHT22 sensor (connected to GPIO6 on pin 31)
 dht_device = adafruit_dht.DHT22(board.D6)
 
 # CSV file path
