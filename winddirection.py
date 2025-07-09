@@ -20,20 +20,18 @@ with serial.Serial("/dev/ttyUSB0", baudrate=9600, parity=serial.PARITY_NONE, tim
             ser.write(request)
             time.sleep(0.1)
             response = ser.read(8)
-
+            
             if len(response) >= 4:
-                direction_idx = response[3]
-                if direction_idx < 16:
-                    degrees = direction_idx * 22.5
-                else:
-                    degrees = "Ongeldige waarde"
-
+                direction_01 = response[3]
+                direction_02 = response[4]
+                graden = (direction_01 * 256 + direction_02) / 10
+                                
                 timestamp = datetime.now().strftime("%d-%m-%Y %H:%M")
-                print(f"[{timestamp}] Windrichting: {degrees}°")
+                print(f"[{timestamp}] Windrichting: {graden}°")
 
                 with open(csv_file, "a", newline='') as f:
                     writer = csv.writer(f)
-                    writer.writerow([timestamp, degrees])
+                    writer.writerow([timestamp, graden])
             else:
                 print("Incomplete response")
 
@@ -43,5 +41,5 @@ with serial.Serial("/dev/ttyUSB0", baudrate=9600, parity=serial.PARITY_NONE, tim
                 log.write(f"[{timestamp}] Fout: {str(e)}\n")
             print("Fout bij het lezen van de sensor:", e)
 
-        time.sleep(300)  # every 5 minutes
+        time.sleep(60) # every minute
 
