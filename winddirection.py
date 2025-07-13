@@ -41,5 +41,5 @@ with serial.Serial("/dev/ttyUSB0", baudrate=9600, parity=serial.PARITY_NONE, tim
                 log.write(f"[{timestamp}] Fout: {str(e)}\n")
             print("Fout bij het lezen van de sensor:", e)
 
-        time.sleep(60) # every minute
+        time.sleep(300) # every 5 minutes
 
