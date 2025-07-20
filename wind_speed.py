@@ -20,7 +20,7 @@ spi = busio.SPI(clock = board.SCK, MISO = board.MISO, MOSI = board.MOSI)
 cs = digitalio.DigitalInOut(board.D7)
 # Create MCP3008 object
 mcp = MCP.MCP3008(spi, cs)
-# Create analog input chanel for anemometer on the MCP3008 pin 0
+# Create analog input channel for anemometer on the MCP3008 pin 0
 channel = AnalogIn(mcp, MCP.P0)
 
 csv_file = "wind_speed.csv"
