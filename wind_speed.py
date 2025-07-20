@@ -38,7 +38,7 @@ try:
 except FileExistsError:
     pass
 
-# Prevent all cacalations from taking place at the same time
+# Prevent all calculations from taking place at the same time
 time.sleep(210)
 
 while True:
