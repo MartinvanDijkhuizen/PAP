@@ -1,4 +1,4 @@
-from flask import Flask, render_template, send_from_directory, send_file, jsonify
+from flask import Flask, render_template, send_from_directory, send_file, jsonify, request, Response
 import os
 import zipfile
 import io
@@ -6,6 +6,10 @@ import csv
 
 app = Flask(__name__)
 csv_folder = '/home/hu/PAP'
+
+USERNAME = 'PAP'
+PASSWORD = 'ArvPap2025'
+
 
 def get_latest_error():
     error_file = os.path.join(csv_folder, 'sensorerrors.csv')
@@ -23,6 +27,21 @@ def get_latest_error():
                         "description": f"Temp: {last[2]} °C, RH: {last[3]} %"
                     }
     return latest_error
+
+def check_auth(username, password):
+    return username == USERNAME and password == PASSWORD
+
+def authenticate():
+    return Response(
+        'Toegang geweigerd.\n', 401,
+        {'WWW-Authenticate': 'Basic realm="Login vereist"'})
+
+@app.before_request
+def require_auth():
+    auth = request.authorization
+    if not auth or not check_auth(auth.username, auth.password):
+        return authenticate()
+
 
 @app.route('/')
 def home():
