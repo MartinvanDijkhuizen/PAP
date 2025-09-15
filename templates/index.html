@@ -1,58 +1,60 @@
+
 <!DOCTYPE html>
 <html lang="nl">
 <head>
     <title>Plug and Play Demonstrator</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3/build/global/luxon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
     <style>
-        h1, h2 {
-            font-size: 40px;
-        }
+        h1, h2 { font-size: 30px; }
         .chart-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
+            gap: 40px;
         }
         canvas {
             width: 100% !important;
-            height: 800px !important;
+            height: 400px !important;
         }
     </style>
 </head>
 <body>
-
-<h1>Grafieken Temperatuur en Vochtigheid</h1>
-
+<h1>Grafieken</h1>
 <div class="chart-grid">
     <canvas id="temperatureChart"></canvas>
     <canvas id="humidityChart"></canvas>
+    <canvas id="windspeedChart"></canvas>
+    <canvas id="winddirectionChart"></canvas>
 </div>
 
-<h2>Downloads</h2>
-<ul>
-    <li><a href="/download/sensorbuitenmuur.csv"><button>Download sensorbuitenmuur CSV</button></a></li>
-    <li><a href="/download/sensorbinnenmuur.csv"><button>Download sensorbinnenmuur CSV</button></a></li>
-    <li><a href="/download/sensorhoek.csv"><button>Download sensorhoek CSV</button></a></li>
-    <li><a href="/download/sensorvloer.csv"><button>Download sensorvloer CSV</button></a></li>
-    <li><a href="/download/sensorraam.csv"><button>Download sensorraam CSV</button></a></li>
-    <li><a href="/download/sensorruimte.csv"><button>Download sensorruimte CSV</button></a></li>
-    <li><a href="/download/weerdata.csv"><button>Download windrichting CSV</button></a></li>
-    <li><a href="/download/weer_speed.csv"><button>Download windsnelheid CSV</button></a></li>
-</ul>
+<h2>Download</h2>
+    <ul>
+        <li><a href="/download/buitenmuur.csv"><button>Download buitenmuur CSV</button></a></li>
+        <li><a href="/download/binnenmuur.csv"><button>Download binnenmuur CSV</button></a></li>
+        <li><a href="/download/hoek.csv"><button>Download hoek CSV</button></a></li>
+        <li><a href="/download/vloer.csv"><button>Download vloer CSV</button></a></li>
+        <li><a href="/download/raam.csv"><button>Download raam CSV</button></a></li>
+        <li><a href="/download/ruimte.csv"><button>Download ruimte CSV</button></a><li>
+        <li><a href="/download/wind_speed.csv"><button>Download wind_speed CSV</button></a></li>
+        <li><a href="/download/wind_direction.csv"><button>Download wind_direction CSV</button></a></li>
+    </ul>
 
-<h2>Alle CSV-bestanden in één ZIP</h2>
-<a href="/download/all-csvs.zip">
-    <button>Download Alle CSV's als ZIP</button>
-</a>
+    <h2>Alle CSV-bestanden in één ZIP</h2>
+    <a href="/download/all-csvs.zip">
+        <button>Download Alle CSV's als ZIP</button>
+    </a>
 
 <h2>Laatste foutmelding</h2>
 <div style="border: 1px solid #cc0000; padding: 10px; background-color: #ffe6e6;">
     <strong>Bestand:</strong> <span id="error-source">{{ latest_error.source }}</span><br>
     <strong>Tijdstip:</strong> <span id="error-timestamp">{{ latest_error.timestamp }}</span><br>
-    <strong>Temp en humidity:</strong> <span id="error-description">{{ latest_error.description }}</span>
+    <strong>Temp en humindity:</strong> <span id="error-description">{{ latest_error.description }}</span>
 </div>
 
 <script>
-    function movingAverage(data, windowSize) {
+function movingAverage(data, windowSize) {
     const result = [];
     for (let i = 0; i <= data.length - windowSize; i++) {
         const window = data.slice(i, i + windowSize);
@@ -60,155 +62,209 @@
         result.push(avg);
     }
     return result;
+}
+
+function filterLast24Hours(timestamps, values) {
+    const now = new Date();
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const filteredTimestamps = [];
+    const filteredValues = [];
+    for (let i = 0; i < timestamps.length; i++) {
+        if (timestamps[i] >= oneDayAgo) {
+            filteredTimestamps.push(timestamps[i]);
+            filteredValues.push(values[i]);
+        }
     }
+    return { timestamps: filteredTimestamps, values: filteredValues };
+}
 
-    
-    function updateLatestError() {
-        fetch('/latest-error')
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('error-source').textContent = data.source;
-                document.getElementById('error-timestamp').textContent = data.timestamp;
-                document.getElementById('error-description').textContent = data.description;
-            })
-            .catch(error => console.error('Error fetching the latest error:', error));
-    }
+const sensorFiles = ["buitenmuur", "binnenmuur", "hoek", "vloer", "raam", "ruimte"];
+const temperatureChartCtx = document.getElementById('temperatureChart').getContext('2d');
+const humidityChartCtx = document.getElementById('humidityChart').getContext('2d');
+const windspeedChartCtx = document.getElementById('windspeedChart').getContext('2d');
+const winddirectionChartCtx = document.getElementById('winddirectionChart').getContext('2d');
 
-    setInterval(updateLatestError, 60000);
+const sensorColors = {
+    buitenmuur: 'rgb(232, 200, 0)',
+    binnenmuur: 'rgb(0, 255, 0)',
+    hoek: 'rgb(0, 0, 255)',
+    vloer: 'rgb(0, 0, 0)',
+    raam: 'rgb(125, 125, 125)',
+    ruimte: 'rgb(125, 0, 255)'
+};
 
-    
-    const sensorFiles = [
-        "sensorbuitenmuur",
-        "sensorbinnenmuur",
-        "sensorhoek",
-        "sensorvloer",
-        "sensorraam",
-        "sensorruimte"
-    ];
+let temperatureChart;
+let humidityChart;
+let windspeedChart;
+let winddirectionChart;
 
-    const temperatureChartCtx = document.getElementById('temperatureChart').getContext('2d');
-    const humidityChartCtx = document.getElementById('humidityChart').getContext('2d');
+function loadAllSensorData() {
+    const promises = sensorFiles.map(sensorId =>
+        fetch(`/graph-data/${sensorId}.csv`)
+        .then(response => response.json())
+        .then(data => {
+            const timestamps = data.timestamps.map(t => new Date(t));
+            const filteredTemp = filterLast24Hours(timestamps, data.temperatures);
+            const filteredHum = filterLast24Hours(timestamps, data.humidities);
+            return {
+                sensorId,
+                timestamps: filteredTemp.timestamps,
+                temperatures: filteredTemp.values,
+                humidities: filteredHum.values
+            };
+        })
+    );
 
-    const sensorColors = {
-        sensorbuitenmuur: 'rgb(232, 200, 0)',
-        sensorbinnenmuur: 'rgb(0, 255, 0)',
-        sensorhoek: 'rgb(0, 0, 255)',
-        sensorvloer: 'rgb(0, 0, 0)',
-        sensorraam: 'rgb(125, 125, 125)',
-        sensorruimte: 'rgb(125, 0, 255)'
-    };
+    Promise.all(promises).then(sensorDataArray => {
+        const timestamps = sensorDataArray[0].timestamps;
 
-    let temperatureChart;
-    let humidityChart;
-
-    function loadAllSensorData() {
-        const promises = sensorFiles.map(sensorId =>
-            fetch(`/graph-data/${sensorId}.csv`)
-                .then(response => response.json())
-                .then(data => {
-                    // Beperk tot de laatste 288 datapunten
-                    const totalPoints = data.timestamps.length;
-                    const startIndex = Math.max(0, totalPoints - 288);
-
-                    return {
-                        sensorId,
-                        timestamps: data.timestamps.slice(startIndex),
-                        temperatures: data.temperatures.slice(startIndex),
-                        humidities: data.humidities.slice(startIndex)
-                    };
-                })
-        );
-
-        Promise.all(promises).then(sensorDataArray => {
-            const timestamps = sensorDataArray[0].timestamps.slice(2, -2);
-
-
-            const temperatureDatasets = sensorDataArray.map(sensor => {
-                const smoothedTemps = movingAverage(sensor.temperatures, 21);
-                const adjustedTimestamps = sensor.timestamps.slice(10, -10); // om lengte gelijk te maken
-                return {
-                    label: sensor.sensorId,
-                    data: smoothedTemps,
-                    borderColor: sensorColors[sensor.sensorId],
-                    borderWidth: 2,
-                    pointRadius: 0,
-                    tension: 0.5,
-                    cubicInterpolationMode: 'monotone',
-                    fill: false
-                };
-            });
-
-            const humidityDatasets = sensorDataArray.map(sensor => {
-                const smoothedHumidities = movingAverage(sensor.humidities, 21);
-                const adjustedTimestamps = sensor.timestamps.slice(10, -10);
-                return {
-                    label: sensor.sensorId,
-                    data: smoothedHumidities,
-                    borderColor: sensorColors[sensor.sensorId],
-                    borderWidth: 2,
-                    pointRadius: 0,
-                    tension: 0.5,
-                    cubicInterpolationMode: 'monotone',
-                    fill: false
-                };
-            });
-
-
-            if (temperatureChart) {
-                temperatureChart.data.labels = timestamps;
-                temperatureChart.data.datasets = temperatureDatasets;
-                temperatureChart.update();
-            } else {
-                temperatureChart = new Chart(temperatureChartCtx, {
-                    type: 'line',
-                    data: {
-                        labels: timestamps,
-                        datasets: temperatureDatasets
-                    },
-                    options: chartOptions('Temperatuur (°C)')
-                });
-            }
-
-            if (humidityChart) {
-                humidityChart.data.labels = timestamps;
-                humidityChart.data.datasets = humidityDatasets;
-                humidityChart.update();
-            } else {
-                humidityChart = new Chart(humidityChartCtx, {
-                    type: 'line',
-                    data: {
-                        labels: timestamps,
-                        datasets: humidityDatasets
-                    },
-                    options: chartOptions('Luchtvochtigheid (%)')
-                });
-            }
+        const temperatureDatasets = sensorDataArray.map(sensor => {
+            const smoothedTemps = movingAverage(sensor.temperatures, 11);
+            return {
+                label: sensor.sensorId,
+                data: smoothedTemps,
+                borderColor: sensorColors[sensor.sensorId],
+                borderWidth: 2,
+                pointRadius: 0,
+                tension: 0.5,
+                cubicInterpolationMode: 'monotone',
+                fill: false
+            };
         });
-    }
 
-    function chartOptions(titleText) {
+        const humidityDatasets = sensorDataArray.map(sensor => {
+            const smoothedHumidities = movingAverage(sensor.humidities, 11);
+            return {
+                label: sensor.sensorId,
+                data: smoothedHumidities,
+                borderColor: sensorColors[sensor.sensorId],
+                borderWidth: 2,
+                pointRadius: 0,
+                tension: 0.5,
+                cubicInterpolationMode: 'monotone',
+                fill: false
+            };
+        });
+
+        if (temperatureChart) {
+            temperatureChart.data.labels = timestamps;
+            temperatureChart.data.datasets = temperatureDatasets;
+            temperatureChart.update();
+        } else {
+            temperatureChart = new Chart(temperatureChartCtx, {
+                type: 'line',
+                data: {
+                    labels: timestamps,
+                    datasets: temperatureDatasets
+                },
+            options: chartOptions('Temperatuur (°C)')
+            });
+        }
+
+        if (humidityChart) {
+            humidityChart.data.labels = timestamps;
+            humidityChart.data.datasets = humidityDatasets;
+            humidityChart.update();
+        } else {
+            humidityChart = new Chart(humidityChartCtx, {
+                type: 'line',
+                data: {
+                    labels: timestamps,
+                    datasets: humidityDatasets
+                },
+            options: chartOptions('Luchtvochtigheid (%)')
+            });
+        }
+    });
+}
+
+function loadWindSpeedData() {
+    fetch('/graph-data-windspeed/wind_speed.csv')
+        .then(response => response.json())
+        .then(data => {
+            const timestamps = data.timestamps.map(t => new Date(t));
+            const filtered = filterLast24Hours(timestamps, data.windspeeds);
+            const smoothed = movingAverage(filtered.values, 11);
+            if (windspeedChart) {
+                windspeedChart.data.labels = filtered.timestamps;
+                windspeedChart.data.datasets[0].data = smoothed;
+                windspeedChart.update();
+            } else {
+                windspeedChart = new Chart(windspeedChartCtx, {
+                    type: 'line',
+                    data: {
+                        labels: filtered.timestamps,
+                        datasets: [{
+                            label: 'Windsnelheid',
+                            data: smoothed,
+                            borderColor: 'rgb(0, 150, 255)',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            tension: 0.4,
+                            fill: false
+                        }]
+                    },
+                    options: chartOptions('Windsnelheid (m/s)')
+                });
+            }
+
+        });
+}
+
+function loadWindDirectionData() {
+    fetch('/graph-data-winddirection/wind_direction.csv')
+        .then(response => response.json())
+        .then(data => {
+            const timestamps = data.timestamps.map(t => new Date(t));
+            const filtered = filterLast24Hours(timestamps, data.winddirections);
+            const smoothed = movingAverage(filtered.values, 11);
+            if (winddirectionChart) {
+                winddirectionChart.data.labels = filtered.timestamps;
+                winddirectionChart.data.datasets[0].data = smoothed;
+                winddirectionChart.update();
+            } else {
+                winddirectionChart = new Chart(winddirectionChartCtx, {
+                    type: 'line',
+                    data: {
+                        labels: filtered.timestamps,
+                        datasets: [{
+                            label: 'Windrichting',
+                            data: smoothed,
+                            borderColor: 'rgb(255, 100, 0)',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            tension: 0.4,
+                            fill: false
+                        }]
+                    },
+                    options: chartOptions('Windrichting (°)')
+                });
+            }
+
+        });
+}
+
+function chartOptions(titleText) {
+    const yLimits = {
+        'Temperatuur (°C)': { min: 17, max: 27 },
+        'Luchtvochtigheid (%)': { min: 40, max: 80 },
+        'Windsnelheid (m/s)': { min: 0, max: 30 },
+        'Windrichting (°)': { min: 0, max: 360 }
+    };
     return {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-            tooltip: {
-                enabled: true,
-                bodyFont: { size: 20 }
-            },
-            title: {
-                display: true,
-                text: titleText,
-                font: { size: 40 }
-            },
+            tooltip: { enabled: true, bodyFont: { size: 20 } },
+            title: { display: true, text: titleText, font: { size: 30 } },
             legend: {
                 labels: {
-                    font: { size: 32 },
+                    font: { size: 20 },
                     generateLabels: function(chart) {
-                        const datasets = chart.data.datasets;
-                        return datasets.map((dataset, i) => ({
+                        return chart.data.datasets.map((dataset, i) => ({
                             text: dataset.label,
-                            fillStyle: dataset.borderColor || dataset.backgroundColor,
-                            strokeStyle: dataset.borderColor || dataset.backgroundColor,
+                            fillStyle: dataset.borderColor,
+                            strokeStyle: dataset.borderColor,
                             lineWidth: 0,
                             hidden: !chart.isDatasetVisible(i),
                             index: i
@@ -219,25 +275,32 @@
         },
         scales: {
             x: {
-                title: { display: false },
+                type: 'time',
+                time: { unit: 'hour', tooltipFormat: 'DD-MM-YYYY HH:mm' },
                 ticks: {
-                    callback: function(value, index, ticks) {
-                        return index % 24 === 0 ? this.getLabelForValue(value) : '';
-                    },
-                    font: { size: 20 }
+                    font: { size: 20 },
+                    callback: function(value) {
+                        const date = new Date(value);
+                        return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+                    }
                 }
             },
             y: {
+                min: yLimits[titleText]?.min,
+                max: yLimits[titleText]?.max,
                 ticks: { font: { size: 20 } }
             }
         }
     };
 }
 
-    loadAllSensorData();
-    setInterval(loadAllSensorData, 60000);
-    
+loadAllSensorData();
+loadWindSpeedData();
+loadWindDirectionData();
+setInterval(loadAllSensorData, 300000);
+setInterval(loadWindSpeedData, 300000);
+setInterval(loadWindDirectionData, 300000);
 </script>
-
 </body>
 </html>
+

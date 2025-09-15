@@ -135,7 +135,7 @@ while True:
 	
 	# 5 minutes loop	
 	try:
-		timestamp = datetime.now().strftime("%d-%m-%Y %H:%M")
+		timestamp = datetime.now().replace(microsecond=0).isoformat()
 		Tmean_wall_west = round(Tmean_wall_west,1)
 		Tmean_wall_east = round(Tmean_wall_east,1)
 		Tmean_floor_west = round(Tmean_floor_west,1)
@@ -148,7 +148,7 @@ while True:
 			writer = csv.writer(f)
 			writer.writerow([timestamp, Tmean_wall_west, Tmean_wall_east, Tmean_floor_west, Tmean_floor_east])
 	except Exception as e:
-		timestamp = datetime.now().strftime("%d-%m-%Y %H:%M")
+		timestamp = timestamp = datetime.now().replace(microsecond=0).isoformat()
 		with open("burensimulator.log", "a") as log:
 			log.write(f"[{timestamp}] Fout: {str(e)}\n")
 			print("Fout bij het lezen van de sensor:", e)	

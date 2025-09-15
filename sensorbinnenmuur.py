@@ -18,7 +18,7 @@ import time
 from datetime import datetime
 
 # CSV file path
-csv_file = "sensorbinnenmuur.csv"
+csv_file = "binnenmuur.csv"
 
 time.sleep(60)
 
@@ -26,7 +26,7 @@ time.sleep(60)
 try:
     with open(csv_file, 'x', newline='') as f:
         writer = csv.writer(f)
-        writer.writerow(["timestamp", "temperature_C", "humidity_percent"])
+        writer.writerow(["timestamp", "temperature", "humidity"])
 except FileExistsError:
     pass  # File already exists
 
@@ -38,8 +38,8 @@ try:
             temperature = dht_device.temperature
             humidity = dht_device.humidity
             if temperature is not None and humidity is not None:
-                # Format timestamp as day-month-year hour:minute
-                timestamp = datetime.now().strftime("%d-%m-%Y %H:%M")
+                # Format timestamp in isoformat
+                timestamp = datetime.now().replace(microsecond=0).isoformat()
                 print(f"{timestamp} | Temp: {temperature:.1f}°C | Humidity: {humidity:.1f}%")
 
                 # Append to CSV

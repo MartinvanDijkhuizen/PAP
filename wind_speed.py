@@ -34,7 +34,7 @@ def calculate_wind_speed(x):
 try:
     with open(csv_file, "x", newline='') as f:
         writer = csv.writer(f)
-        writer.writerow(["Tijdstip", "Windsnelheid"])
+        writer.writerow(["Timestamp", "Wind_speed"])
 except FileExistsError:
     pass
 
@@ -43,14 +43,13 @@ time.sleep(210)
 
 while True:
 	try:
-		timestamp = datetime.now().strftime("%d-%m-%Y %H:%M")
+		timestamp = datetime.now().replace(microsecond=0).isoformat()
 		wind_speed = calculate_wind_speed(channel.voltage)
-		print(f"[{timestamp}] Windsnelheid: {wind_speed}m/s")
 		with open(csv_file, "a", newline='') as f:
 			writer = csv.writer(f)
 			writer.writerow([timestamp, wind_speed])
 	except Exception as e:
-		timestamp = datetime.now().strftime("%d-%m-%Y %H:%M")
+		timestamp = datetime.now().replace(microsecond=0).isoformat()
 		with open("wind_errors.log", "a") as log:
 			log.write(f"[{timestamp}] Fout: {str(e)}\n")
 			print("Fout bij het lezen van de sensor:", e)

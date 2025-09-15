@@ -79,10 +79,43 @@ def graph_data(filename):
         reader = csv.DictReader(csvfile)
         for row in reader:
             data['timestamps'].append(row['timestamp'])
-            data['temperatures'].append(float(row['temperature_C']))
-            data['humidities'].append(float(row['humidity_percent']))
+            data['temperatures'].append(float(row['temperature']))
+            data['humidities'].append(float(row['humidity']))
 
     return jsonify(data)
+    
+@app.route('/graph-data-windspeed/<filename>')
+def graph_data_windspeed(filename):
+    data = {'timestamps': [], 'windspeeds': []}
+    filepath = os.path.join(csv_folder, filename)
+
+    if not os.path.isfile(filepath) or not filename.endswith('.csv'):
+        return jsonify({'error': 'Invalid file'}), 400
+
+    with open(filepath) as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            data['timestamps'].append(row['timestamp'])
+            data['windspeeds'].append(float(row['wind_speed']))
+
+    return jsonify(data)
+
+@app.route('/graph-data-winddirection/<filename>')
+def graph_data_winddirection(filename):
+    data = {'timestamps': [], 'winddirections': []}
+    filepath = os.path.join(csv_folder, filename)
+
+    if not os.path.isfile(filepath) or not filename.endswith('.csv'):
+        return jsonify({'error': 'Invalid file'}), 400
+
+    with open(filepath) as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            data['timestamps'].append(row['timestamp'])
+            data['winddirections'].append(float(row['wind_direction']))
+
+    return jsonify(data)
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

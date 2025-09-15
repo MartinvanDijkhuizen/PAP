@@ -19,7 +19,7 @@ if os.path.exists(csv_file):
 
 while True:
     # Get current time
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    now = datetime.now().replace(microsecond=0).isoformat()
 
     # Increase counter by 1
     counter += 1
