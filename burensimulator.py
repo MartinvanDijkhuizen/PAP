@@ -10,16 +10,16 @@ import numpy
 
 # Neighbour simulator defaults
 # Simulated temperature of walls and floor
-Taim_wall_west = 21
-Taim_wall_east = 21
-Taim_floor_west = 21
-Taim_floor_east = 21
+Taim_wall_west = 19.0
+Taim_wall_east = 19.0
+Taim_floor_west = 19.0
+Taim_floor_east = 19.0
 
 # Set all Tmean to 0
-Tmean_wall_west = 0
-Tmean_wall_east = 0
-Tmean_floor_west = 0
-Tmean_floor_east = 0
+Tmean_wall_west = 0.0
+Tmean_wall_east = 0.0
+Tmean_floor_west = 0.0
+Tmean_floor_east = 0.0
 
 # Initialize SPI connection
 spi = busio.SPI(clock = board.SCK, MISO = board.MISO, MOSI = board.MOSI)
@@ -95,10 +95,10 @@ while True:
 	"""
 	
 	# start to set al Tmean to 0
-	Tmean_wall_west = 0
-	Tmean_wall_east = 0
-	Tmean_floor_west = 0
-	Tmean_floor_east = 0
+	Tmean_wall_west = 0.0
+	Tmean_wall_east = 0.0
+	Tmean_floor_west = 0.0
+	Tmean_floor_east = 0.0
 	
 	
 	# 60 seconds loop

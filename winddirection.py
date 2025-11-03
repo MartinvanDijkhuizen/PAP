@@ -10,7 +10,7 @@ csv_file = "wind_direction.csv"
 try:
     with open(csv_file, "x", newline='') as f:
         writer = csv.writer(f)
-        writer.writerow(["Timestamp", "Wind_direction"])
+        writer.writerow(["timestamp", "wind_direction"])
 except FileExistsError:
     pass
 

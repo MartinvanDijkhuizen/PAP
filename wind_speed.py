@@ -34,7 +34,7 @@ def calculate_wind_speed(x):
 try:
     with open(csv_file, "x", newline='') as f:
         writer = csv.writer(f)
-        writer.writerow(["Timestamp", "Wind_speed"])
+        writer.writerow(["timestamp", "wind_speed"])
 except FileExistsError:
     pass
 
