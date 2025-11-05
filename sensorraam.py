@@ -8,7 +8,7 @@ from datetime import datetime
 dht_device = adafruit_dht.DHT22(board.D17)
 
 # CSV file path
-csv_file = "sensorraam.csv"
+csv_file = "raam.csv"
 
 time.sleep(120)
 
