@@ -1,0 +1,20 @@
+📄 Verwerken: sensorerrors.csv
+✅ Bestand bijgewerkt: 1QhsJIt7EZWupW-vZLLEDNVYjjsHwfK2F
+📄 Verwerken: raam.csv
+✅ Bestand bijgewerkt: 15lm-NLsM6ooO2hvt9IsIwFI9i6vTvW8Z
+📄 Verwerken: hoek.csv
+✅ Bestand bijgewerkt: 1gv56ym8k4MpTCenJjgoLJCpw2KPxK5o1
+📄 Verwerken: ruimte.csv
+✅ Bestand bijgewerkt: 1RMalB2TC773ulfIqw_w9M-EPpEmV1tED
+📄 Verwerken: buitenmuur.csv
+⚠️ Fout bij bijwerken van buitenmuur.csv: <HttpError 500 when requesting https://www.googleapis.com/upload/drive/v3/files/1qODVp0Etvp4UIvJ0m5qdHxjdx88xgm1i?alt=json&uploadType=media returned "Internal Error". Details: "[{'message': 'Internal Error', 'domain': 'global', 'reason': 'internalError'}]">
+📄 Verwerken: wind_speed.csv
+✅ Bestand bijgewerkt: 1F-eZhjuriQX8rR3N54Eeh3sDnSywdLrk
+📄 Verwerken: binnenmuur.csv
+✅ Bestand bijgewerkt: 1FoLjVe3aYyEvpKu93aOz1jCW0dOJuZ_4
+📄 Verwerken: wind_direction.csv
+✅ Bestand bijgewerkt: 18KpLaBUoV-oTl7SRxl5Pb9p_UNHD1uOm
+📄 Verwerken: burensimulator.csv
+✅ Bestand bijgewerkt: 1B9LhueYdMG1J98xdYgmOENBJu69BMNm7
+📄 Verwerken: vloer.csv
+✅ Bestand bijgewerkt: 1LpKutso5oqqW18a8UIwwzm3sns1IbeK4

@@ -3,3 +3,5 @@ venv/
 .vscode/
 env/
 secrets/
+.lgd-nfy0
+nohup.out

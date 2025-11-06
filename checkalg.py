@@ -6,12 +6,12 @@ from datetime import datetime
 
 # alle bestanden die gecheckt moeten worden, voeg hier je extra bestand toe en maak de tijd onderin korter
 CSV_FILES = [
-        '/home/hu/PAP/sensorbuitenmuur.csv',
-        '/home/hu/PAP/sensorbinnenmuur.csv',
-        '/home/hu/PAP/sensorhoek.csv',
-        '/home/hu/PAP/sensorraam.csv',
-        '/home/hu/PAP/sensorruimte.csv',
-        '/home/hu/PAP/sensorvloer.csv'
+        '/home/hu/PAP/buitenmuur.csv',
+        '/home/hu/PAP/binnenmuur.csv',
+        '/home/hu/PAP/hoek.csv',
+        '/home/hu/PAP/raam.csv',
+        '/home/hu/PAP/ruimte.csv',
+        '/home/hu/PAP/vloer.csv'
 ]
 
 # file waar alle fouten in gestopt worden
