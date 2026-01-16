@@ -79,18 +79,16 @@ except FileExistsError:
 while True:
 	"""
 	The script contains two loops:
-	1. 60 seconds loop 
+	1. 5 minutes loop 
 		In this loop the script measures the Temperature of the west
-		wall, Tmes_wall_west. With Taim_wall_west, it determines if	the
-		simulator needs to add heat. If so it changes sim_wall_west in
-		TRUE during 15 seconds.
-		Consecutively, sim_wall_east, sim_floor_west, and
-		sim_floor_east are processed. All during 15 seconds, 60
-		seconds in total.
-		The consecutive process is deliberately. Only one wall or floor
-		can be heated at a time, to prevent Electrical overload.
-	2. 5 minutes loop
-		After 5 60 seconds loops, the mean of the Temperatures are
+		wall (Tmes_wall_west), east wall (Tmes_wall_east), west floor 
+		(Tmes_floor_west), and east floor (Tmes_floor_east). With
+		Taim_wall_west, Taim_wall_east, Taim_floor_west, and Taim_floor_east
+		it determines if the simulator needs to add heat. If so it 
+		changes sim_wall_west, sim_wall_east, sim_floor_west, and/or 
+		sim_floor_east in TRUE during 300 seconds.		
+	2. 10 minutes loop
+		After 2 300 seconds loops, the mean of the Temperatures are
 		written to the .csv-file. Then the procedure starts again. 
 	"""
 	
@@ -101,39 +99,36 @@ while True:
 	Tmean_floor_east = 0.0
 	
 	
-	# 60 seconds loop
-	for _ in range(5):
+	# 5 minutes loop
+	for _ in range(2):
 		Tmes_wall_west = calculate_temperature(NTC1.voltage)
 		if Tmes_wall_west < Taim_wall_west:
 			sim_wall_west.value = True
-		time.sleep(15)
-		sim_wall_west.value = False	
-		Tmean_wall_west += Tmes_wall_west/5 
-			
+		else:
+			sim_wall_west.value = False
 		Tmes_wall_east = calculate_temperature(NTC2.voltage)
 		if Tmes_wall_east < Taim_wall_east:
 			sim_wall_east.value = True
-		time.sleep(15)
-		sim_wall_east.value = False
-		Tmean_wall_east += Tmes_wall_east/5
-			
+		else:
+			sim_wall_east.value = False	
 		Tmes_floor_west = calculate_temperature(NTC3.voltage)
 		if Tmes_floor_west < Taim_floor_west:
 			sim_floor_west.value = True
-		time.sleep(15)
-		sim_floor_west.value = False			
-		Tmean_floor_west += Tmes_floor_west/5
-			
+		else:
+			sim_floor_west.value = False	
 		Tmes_floor_east = calculate_temperature(NTC4.voltage)
 		if Tmes_floor_east < Taim_floor_east:
 			sim_floor_east.value = True
-		time.sleep(15)
-		sim_floor_east.value = False
-		Tmean_floor_east += Tmes_floor_east/5
-			
-		
+		else:
+			sim_floor_east.value = False	
+		time.sleep(300)
+		Tmean_wall_west += Tmes_wall_west/2 
+		Tmean_wall_east += Tmes_wall_east/2
+		Tmean_floor_west += Tmes_floor_west/2		
+		Tmean_floor_east += Tmes_floor_east/2
+				
 	
-	# 5 minutes loop	
+	# 10 minutes loop	
 	try:
 		timestamp = datetime.now().replace(microsecond=0).isoformat()
 		Tmean_wall_west = round(Tmean_wall_west,1)

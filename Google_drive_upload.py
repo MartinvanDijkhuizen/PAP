@@ -5,6 +5,8 @@ import pickle
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
+from google.auth.transport.requests import Request
+import socket
 
 # Lokale map met CSV-bestanden
 LOCAL_FOLDER = '/home/hu/PAP/'
@@ -21,6 +23,12 @@ SCOPES = ['https://www.googleapis.com/auth/drive.file']
 CLIENT_SECRET_FILE = os.path.join(LOCAL_SECRET, 'client_secret.json')
 TOKEN_PICKLE = os.path.join(LOCAL_SECRET, 'token.pickle')
 
+#Get free port
+def get_free_port():
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(('', 0))
+        return s.getsockname()[1]
+
 # Authenticatie
 def authenticate_drive():
     creds = None
@@ -30,15 +38,20 @@ def authenticate_drive():
         with open(TOKEN_PICKLE, 'rb') as token:
             creds = pickle.load(token)
 
-    # Als er geen geldige credentials zijn, start de flow via console
-    if not creds or not creds.valid:
-        flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRET_FILE, SCOPES)
-        creds = flow.run_local_server(port=8080, open_browser=False)
-        print("✅ Authenticatie geslaagd. Token ontvangen.")
+    # Vernieuw token als het verlopen is
+    if creds and creds.expired and creds.refresh_token:
+        creds.refresh(Request())
+        print("🔄 Token vernieuwd.")
+    elif not creds or not creds.valid:
+        flow = InstalledAppFlow.from_client_secrets_file(
+            CLIENT_SECRET_FILE, SCOPES
+        )
+        creds = flow.run_local_server(port=port, open_browser=False)
+        print("✅ Nieuwe authenticatie uitgevoerd.")
 
-        # Sla token op
-        with open(TOKEN_PICKLE, 'wb') as token:
-            pickle.dump(creds, token)
+    # Sla token altijd op (ook na refresh)
+    with open(TOKEN_PICKLE, 'wb') as token:
+        pickle.dump(creds, token)
 
     service = build('drive', 'v3', credentials=creds)
     return service
@@ -82,8 +95,17 @@ def upload_all_csvs(local_folder, drive_folder_id):
                 print(f"🆕 Nieuw bestand geüpload: {new_file.get('id')}")
             except Exception as e:
                 print(f"⚠️ Fout bij aanmaken van {file_name}: {e}")
-        time.sleep(1)
+        time.sleep(2)
 
 # ▶️ Start upload
 if __name__ == '__main__':
-    upload_all_csvs(LOCAL_FOLDER, DRIVE_FOLDER_ID)
+    port = get_free_port()
+    while True:
+        try:
+            upload_all_csvs(LOCAL_FOLDER, DRIVE_FOLDER_ID)
+            
+        except Exception as e:
+            print(f"⚠️ Fout bij uploaden van files: {e}")
+            
+        time.sleep(280)
+        
