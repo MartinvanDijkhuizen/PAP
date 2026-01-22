@@ -54,13 +54,13 @@ csv_file = "burensimulator.csv"
 # Define temperature function
 def calculate_temperature(voltage):
 	#         12k Ohm        NTC
-	# +5V-----=======---+---=====-----Ground
+	# +3.3V-----=======---+---=====-----Ground
 	#                   |
 	#                   |
 	#                MCP3008
 	
 	# Calculate the current through 12K Ohm Resistor
-	I = (5.0 - voltage) / 12000
+	I = (3.3 - voltage) / 12000
 	# Calculate resistant of NTC
 	R = voltage / I
 	# Calculate Temperature with Beta model
