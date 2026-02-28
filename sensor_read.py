@@ -14,10 +14,17 @@ from psycopg2 import sql
 
 # Neighbour simulator defaults
 # Simulated temperature of walls and floor
-Taim_wall_west = 19.0
-Taim_wall_east = 19.0
-Taim_floor_west = 19.0
-Taim_floor_east = 19.0
+Taim_wall_west_day = 19.0
+Taim_wall_east_day = 19.0
+Taim_floor_west_day = 19.0
+Taim_floor_east_day = 19.0
+Taim_wall_west_night = 15.0
+Taim_wall_east_night = 15.0
+Taim_floor_west_night = 15.0
+Taim_floor_east_night = 15.0
+# Initialize start day and start night
+Start_day = datetime.strptime("06:00", "%H:%M").time()
+Start_night = datetime.strptime("23:00", "%H:%M").time()
 # Initialize SPI connection
 spi = busio.SPI(clock=board.SCK, MISO=board.MISO, MOSI=board.MOSI)
 # Assign a chip select pin
@@ -69,15 +76,24 @@ csv_file = "sensordata.csv"
 
 # Database configuration
 DB_CONFIG = {
-    "host": "145.38.194.194",
+    "host": "xxx.xx.xxx.xxx",
     "port": 5432,
     "database": "PAP",
-    "user": "BE-lab",
-    "password": "P!u9@#dp!@y",
+    "user": "xxxx",
+    "password": "xxxxxxxxx",
 }
 
+def day_or_night(n):
+    print(n)
+    if Start_day <= n <= Start_night:
+        print("Het is dag")
+        return Taim_wall_west_day, Taim_wall_east_day, Taim_floor_west_day, Taim_floor_east_day
+    else:
+        print("Het is nacht")
+        return Taim_wall_west_night, Taim_wall_east_night, Taim_floor_west_night, Taim_floor_east_night 
 
-def read_NTC_sensor(NTC):
+
+def read_NTC_sensor(NTC, number):
     try:
         voltage = NTC.voltage
         temperature = calculate_NTC_temperature(voltage)
@@ -85,9 +101,9 @@ def read_NTC_sensor(NTC):
     except Exception as e:
         timestamp_log = datetime.now().replace(microsecond=0).isoformat()
         with open("errors.log", "a") as log:
-            log.write(f"[{timestamp_log}] Fout: {str(e)}\n")
-        print("Fout bij het lezen van de NTC sensor:", e)
-        return None
+            log.write(f"[{timestamp_log}] Fout: {str(e)}, {number}\n")
+        print("Fout bij het lezen van de NTC sensor:",number, e)
+        return 99 # Returning None will cause crash in compare_temperatures(T, Taim)  
 
 
 # Define temperature function
@@ -105,7 +121,7 @@ def calculate_NTC_temperature(voltage):
     # Calculate Temperature with Beta model
     Tinv = numpy.log(R / 10000) / 4050 + 1 / (298.15)
     T = 1 / Tinv - 273.15
-    return T
+    return float(T)
 
 
 def compare_temperatures(T, Taim):
@@ -115,7 +131,7 @@ def compare_temperatures(T, Taim):
         return False
 
 
-def read_dht_sensor(sensor):
+def read_dht_sensor(sensor, name):
     try:
         temperature = sensor.temperature
         humidity = sensor.humidity
@@ -124,11 +140,10 @@ def read_dht_sensor(sensor):
         else:
             return None, None
     except RuntimeError as e:
-        print(f"Sensor error: {e.args[0]}")
+        print(f"Sensor, {name} error: {e.args[0]}")
         timestamp_log = datetime.now().replace(microsecond=0).isoformat()
         with open("errors.log", "a") as log:
-            log.write(f"[{timestamp_log}] Fout: {str(e)}\n")
-        print("Fout bij het lezen van de DHT sensors:", e)
+            log.write(f"[{timestamp_log}] Fout in sensor: {name} {str(e)}\n")
         return None, None
 
 
@@ -146,8 +161,8 @@ def read_wind_speed():
 
 
 def calculate_wind_speed(x):
-    ws = round(a * x + b, 1)
-    return ws
+    ws = float(a * x + b)
+    return round(ws, 1)
 
 
 def read_wind_direction():
@@ -287,10 +302,10 @@ def insert_to_postgres(
         cursor = conn.cursor()
 
         insert_query = sql.SQL(
-            """INSERT INTO sensor_data 
-            (timestamp, t_westgevel, t_oostgevel, t_vloer_west, t_vloer_oost,
-             t_vloer, h_vloer, t_raam, h_raam, t_ruimte, h_ruimte, t_hoek, h_hoek,
-             t_binnenmuur, h_binnenmuur, t_buitenmuur, h_buitenmuur,
+            """INSERT INTO TempHumWind 
+            (timestamp, temp_westgevel, temp_oostgevel, temp_vloer_west, temp_vloer_oost,
+             temp_vloer, hum_vloer, temp_raam, hum_raam, temp_ruimte, hum_ruimte, temp_hoek, hum_hoek,
+             temp_binnenmuur, hum_binnenmuur, temp_buitenmuur, hum_buitenmuur,
              windsnelheid, windrichting)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
         )
@@ -331,36 +346,40 @@ def insert_to_postgres(
 
 def main():
     open_csv()
+    time.sleep(10) #take some time to initialize
     while True:
         # read sensors
-        T_wall_west = read_NTC_sensor(NTC1)
+        now = datetime.now().time()
+        Taim_wall_west, Taim_wall_east, Taim_floor_west, Taim_floor_east = day_or_night(now)
+        T_wall_west = read_NTC_sensor(NTC1, 1)
         sim_wall_west.value = compare_temperatures(T_wall_west, Taim_wall_west)
-        time.sleep(1)
-        T_wall_east = read_NTC_sensor(NTC2)
+        time.sleep(10)
+        T_wall_east = read_NTC_sensor(NTC2, 2)
         sim_wall_east.value = compare_temperatures(T_wall_east, Taim_wall_east)
-        time.sleep(1)
-        T_floor_west = read_NTC_sensor(NTC3)
+        time.sleep(10)
+        T_floor_west = read_NTC_sensor(NTC3, 3)
         sim_floor_west.value = compare_temperatures(T_floor_west, Taim_floor_west)
-        time.sleep(1)
-        T_floor_east = read_NTC_sensor(NTC4)
+        time.sleep(10)
+        T_floor_east = read_NTC_sensor(NTC4, 4)
         sim_floor_east.value = compare_temperatures(T_floor_east, Taim_floor_east)
-        time.sleep(1)
-        Tvloer, Hvloer = read_dht_sensor(dht_floor)
-        time.sleep(1)
-        Traam, Hraam = read_dht_sensor(dht_window)
-        time.sleep(1)
-        Truimte, Hruimte = read_dht_sensor(dht_inside)
-        time.sleep(1)
-        Thoek, Hhoek = read_dht_sensor(dht_corner)
-        time.sleep(1)
-        Tbinnenmuur, Hbinnenmuur = read_dht_sensor(dht_innerwall)
-        time.sleep(1)
-        Tbuitenmuur, Hbuitenmuur = read_dht_sensor(dht_outerwall)
-        time.sleep(1)
+        time.sleep(10)
+        Tvloer, Hvloer = read_dht_sensor(dht_floor, "1 vloer")
+        time.sleep(10)
+        Traam, Hraam = read_dht_sensor(dht_window, "2 raam")
+        time.sleep(10)
+        Truimte, Hruimte = read_dht_sensor(dht_inside, "3 ruimte")
+        time.sleep(10)
+        Thoek, Hhoek = read_dht_sensor(dht_corner, "4 hoek")
+        time.sleep(10)
+        Tbinnenmuur, Hbinnenmuur = read_dht_sensor(dht_innerwall, "5 binnenmuur")
+        time.sleep(10)
+        Tbuitenmuur, Hbuitenmuur = read_dht_sensor(dht_outerwall, "6 buitenmuur")
+        time.sleep(10)
         wind_speed = read_wind_speed()
-        time.sleep(1)
+        time.sleep(10)
         wind_direction = read_wind_direction()
-
+        time.sleep(10)
+        
         timestamp = datetime.now().replace(microsecond=0).isoformat()
 
         # Write to CSV
@@ -385,7 +404,7 @@ def main():
             wind_speed,
             wind_direction,
         )
-        time.sleep(1)
+        time.sleep(10)
 
         # Insert to PostgreSQL
         insert_to_postgres(
@@ -411,8 +430,8 @@ def main():
         )
 
         time.sleep(
-            286
-        )  # Wait for 286 seconds, together with the 14 seconds of sensor reading, this makes it 5 minutes between writes
+            167
+        )  # Wait for 167 seconds, together with the 133 seconds of sensor reading, this makes it 5 minutes between writes
 
 
 if __name__ == "__main__":
